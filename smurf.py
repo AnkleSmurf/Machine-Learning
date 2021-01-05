@@ -1,3 +1,5 @@
+import csv
+
 class DataPoint:
     def __init__(self, time, heelVoltage, ballVoltage, ankleVelocity):
         self.time = time
@@ -11,27 +13,28 @@ class DataFile:
         self.midheelVoltage = 0
         self.midballVoltage = 0
         self.dataPoints = []
-        self.sortedData = []
+        self.sortedData = {}
     
     def collectData(self):
         i = 0
         startTime = 0
-        file = open(inputFile)
-        for line in file:
-            time = float(line.strip('\n').split(',')[0][-6:])
-            if i == 0:
-                startTime += time
-            heelVoltage = float(line.strip('\n').split(',')[1])
-            ballVoltage = float(line.strip('\n').split(',')[2])
-            ankleVelocity = float(line.strip('\n').split(',')[3])
-            self.dataPoints.append(
-                DataPoint(time - startTime, heelVoltage, ballVoltage, ankleVelocity)
-                )
-            self.midheelVoltage += heelVoltage
-            self.midballVoltage += ballVoltage
-            i += 1
-        self.midheelVoltage /= i
-        self.midballVoltage /= i
+        with open(self.inputFile, encoding='utf-8-sig') as inputData:
+            reader = csv.reader(inputData)
+            for line in reader:
+                time = float(line[0][-6:])
+                if i == 0:
+                    startTime += time
+                heelVoltage = float(line[1])
+                ballVoltage = float(line[2])
+                ankleVelocity = float(line[3])
+                self.dataPoints.append(
+                    DataPoint(time - startTime, heelVoltage, ballVoltage, ankleVelocity)
+                    )
+                self.midheelVoltage += heelVoltage
+                self.midballVoltage += ballVoltage
+                i += 1
+            self.midheelVoltage /= i
+            self.midballVoltage /= i
     
     def sortData(self):
         initialContact = []
@@ -61,16 +64,17 @@ class DataFile:
             
             else:
                 errors += 1
-        self.sortedData.append(initialContact)
-        self.sortedData.append(loadingResponse)
-        self.sortedData.append(midStance)
-        self.sortedData.append(terminalStance)
-        self.sortedData.append(preSwing)
-        self.sortedData.append(swingPhase)
+        self.sortedData['initialContact'] = initialContact
+        self.sortedData['loadingResponse'] = loadingResponse
+        self.sortedData['midStance'] = midStance
+        self.sortedData['terminalStance'] = terminalStance
+        self.sortedData['preSwing'] = preSwing
+        self.sortedData['swingPhase'] = swingPhase
     
     def exportData(self):
-        # to do
+        return self.sortedData
 
-smurf = DataFile("footdata.csv")
+smurf = DataFile("heelballdata.csv")
 smurf.collectData()
-smurf.sortData
+smurf.sortData()
+smurf.exportData()
